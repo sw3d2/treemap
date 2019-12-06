@@ -12,13 +12,14 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   const treemap = d3.treemap().size([width, height]);
 
   const data = await readJson(jsonFilePath);
-  console.log('json:', data);
 
   const root = d3.hierarchy(data, (d) => d.children)
     .sum((d) => d.size);
 
   const tree = treemap(root);
-  console.log('tree:', serializeTreemap(tree));
+  console.log(
+    JSON.stringify(
+      serializeTreemap(tree), null, 2));
   if (!WEB) return;
 
   const div = d3.select("body").append("div")
