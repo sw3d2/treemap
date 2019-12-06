@@ -1,9 +1,10 @@
 'use strict';
 
 const WEB = typeof XMLHttpRequest !== 'undefined';
+const DEFAULT_TREEMAP = 'vast.json';
 const d3 = WEB ? window.d3 : require('d3');
 
-async function makeTreeMap(jsonFilePath = 'flare.json') {
+async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   const margin = { top: 40, right: 10, bottom: 10, left: 10 };
   const width = 960 - margin.left - margin.right;
   const height = 500 - margin.top - margin.bottom;
@@ -17,7 +18,8 @@ async function makeTreeMap(jsonFilePath = 'flare.json') {
     .sum((d) => d.size);
 
   const tree = treemap(root);
-  console.log('tree:', tree);
+  console.log('tree:', serializeTreemap(tree));
+  if (!WEB) return;
 
   const div = d3.select("body").append("div")
     .style("position", "relative")
@@ -53,6 +55,16 @@ async function makeTreeMap(jsonFilePath = 'flare.json') {
       .style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
       .style("height", (d) => Math.max(0, d.y1 - d.y0 - 1) + "px")
   });
+}
+
+function serializeTreemap(t) {
+  return {
+    x0: t.x0,
+    y0: t.y0,
+    x1: t.x1,
+    y1: t.y1,
+    children: t.children && t.children.map(serializeTreemap),
+  };
 }
 
 async function readJson(filepath) {
