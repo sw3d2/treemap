@@ -14,16 +14,24 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   const vastfile = await readJson(jsonFilePath);
   verifyVastFile(vastfile);
 
-  const data = vastfile.vast;
+  const vast = vastfile.vast;
+  adjustNodeSize(vast);
+  if (WEB) console.log('vast:', vast);
 
-  const root = d3.hierarchy(data, (d) => d.children)
-    .sum((d) => d.size);
+  const root = d3.hierarchy(vast, (d) => d.children)
+    .sum((d) => (d.size || 0) + (d.dsize || 0));
+  if (WEB) console.log('root:', root);
 
   const tree = treemap(root);
   const tmapfile = generateTmapFile(tree, jsonFilePath);
-  const tmapjson = JSON.stringify(tmapfile, null, 2);
-  console.log(tmapjson);
-  if (!WEB) return;
+
+  if (!WEB) {
+    const tmapjson = JSON.stringify(tmapfile, null, 2);
+    console.log(tmapjson);
+    return;
+  } else {
+    console.log('treemap:', tmapfile);
+  }
 
   const div = d3.select("body").append("div")
     .style("position", "relative")
@@ -48,7 +56,7 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
       ? (d) => { return d.size ? 1 : 0; }
       : (d) => { return d.size; };
 
-    const newRoot = d3.hierarchy(data, (d) => d.children)
+    const newRoot = d3.hierarchy(vast, (d) => d.children)
       .sum(value);
 
     node.data(treemap(newRoot).leaves())
@@ -59,6 +67,18 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
       .style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
       .style("height", (d) => Math.max(0, d.y1 - d.y0 - 1) + "px")
   });
+}
+
+// This is to hijack d3.hierarchy().sum() so node.value = data.size || sum(...).
+function adjustNodeSize(t) {
+  let sum = 0;
+  for (let node of t.children || [])
+    sum += adjustNodeSize(node);
+  if (t.size > 0)
+    t.dsize = -sum;
+  if (sum > t.size)
+    console.warn('Too small:', t.size, sum, t.name);
+  return t.size || sum;
 }
 
 function generateTmapFile(tree, source) {
@@ -82,7 +102,12 @@ function cleanupTreemap(t) {
     y0: t.y0,
     x1: t.x1,
     y1: t.y1,
-    children: t.children && t.children.map(cleanupTreemap),
+    data: {
+      name: t.data.name,
+      type: t.data.type,
+    },
+    children: t.children &&
+      t.children.map(cleanupTreemap),
   };
 }
 
