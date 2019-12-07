@@ -11,15 +11,18 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   const color = d3.scaleOrdinal().range(d3.schemeCategory20c);
   const treemap = d3.treemap().size([width, height]);
 
-  const data = await readJson(jsonFilePath);
+  const vastfile = await readJson(jsonFilePath);
+  verifyVastFile(vastfile);
+
+  const data = vastfile.vast;
 
   const root = d3.hierarchy(data, (d) => d.children)
     .sum((d) => d.size);
 
   const tree = treemap(root);
-  console.log(
-    JSON.stringify(
-      serializeTreemap(tree), null, 2));
+  const tmapfile = generateTmapFile(tree, jsonFilePath);
+  const tmapjson = JSON.stringify(tmapfile, null, 2);
+  console.log(tmapjson);
   if (!WEB) return;
 
   const div = d3.select("body").append("div")
@@ -58,13 +61,28 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   });
 }
 
-function serializeTreemap(t) {
+function generateTmapFile(tree, source) {
+  return {
+    type: 'tmap',
+    version: '1.0.0',
+    timestamp: new Date().toJSON(),
+    source,
+    treemap: cleanupTreemap(tree),
+  };
+}
+
+function verifyVastFile(json) {
+  if (json.format != 'vast' || json.version != '1.0.0')
+    throw new Error('Invalid VAST');
+}
+
+function cleanupTreemap(t) {
   return {
     x0: t.x0,
     y0: t.y0,
     x1: t.x1,
     y1: t.y1,
-    children: t.children && t.children.map(serializeTreemap),
+    children: t.children && t.children.map(cleanupTreemap),
   };
 }
 
