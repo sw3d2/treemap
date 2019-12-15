@@ -1,4 +1,8 @@
 {
+  "name": "treemap-ast",
+  "version": "1.0.0",
+  "description": "Uses D3 to convert an AST into a treemap",
+  "bin": "sh/cli",
   "dependencies": {
     "d3": "4.x"
   }
