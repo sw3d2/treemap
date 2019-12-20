@@ -77,7 +77,7 @@ function adjustNodeSize(t) {
   if (t.size > 0)
     t.dsize = -sum;
   if (sum > t.size)
-    console.warn('Too small:', t.size, sum, t.name);
+    console.warn('Node size is less than the sum of its children:', t.size, sum, t.name);
   return t.size || sum;
 }
 
