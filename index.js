@@ -106,6 +106,7 @@ function cleanupTreemap(t) {
     data: {
       name: t.data.name,
       type: t.data.type,
+      ref: t.data.ref,
     },
     children: t.children &&
       t.children.map(cleanupTreemap),
