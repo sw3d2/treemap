@@ -23,7 +23,7 @@ async function makeTreeMap(jsonFilePath = DEFAULT_TREEMAP) {
   if (WEB) console.log('root:', root);
 
   const tree = treemap(root);
-  const tmapfile = generateTmapFile(tree, jsonFilePath);
+  const tmapfile = generateTmapFile(tree, vastfile.colors, jsonFilePath);
 
   if (!WEB) {
     const tmapjson = JSON.stringify(tmapfile, null, 2);
@@ -81,12 +81,13 @@ function adjustNodeSize(t) {
   return t.size || sum;
 }
 
-function generateTmapFile(tree, source) {
+function generateTmapFile(tree, colors, source) {
   return {
     type: 'tmap',
     version: '1.0.0',
     timestamp: new Date().toJSON(),
     source,
+    colors,
     treemap: cleanupTreemap(tree),
   };
 }
