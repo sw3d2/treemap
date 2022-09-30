@@ -4,6 +4,6 @@
   "description": "Uses D3 to convert an AST into a treemap",
   "bin": "sh/cli",
   "dependencies": {
-    "d3": "4.x"
+    "d3": "7.x"
   }
 }
